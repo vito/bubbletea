@@ -291,7 +291,7 @@ func (p *Program) StartReturningModel() (Model, error) {
 		// Open a new TTY, by request
 		f, err := openInputTTY()
 		if err != nil {
-			return p.initialModel, err
+			return p.initialModel, fmt.Errorf("open input tty: %w", err)
 		}
 
 		defer f.Close() // nolint:errcheck
@@ -314,7 +314,7 @@ func (p *Program) StartReturningModel() (Model, error) {
 
 		f, err := openInputTTY()
 		if err != nil {
-			return p.initialModel, err
+			return p.initialModel, fmt.Errorf("open input tty: %w", err)
 		}
 
 		defer f.Close() // nolint:errcheck
@@ -355,7 +355,7 @@ func (p *Program) StartReturningModel() (Model, error) {
 	// Check if output is a TTY before entering raw mode, hiding the cursor and
 	// so on.
 	if err := p.initTerminal(); err != nil {
-		return p.initialModel, err
+		return p.initialModel, fmt.Errorf("init terminal: %w", err)
 	}
 
 	// If no renderer is set use the standard one.
@@ -396,7 +396,7 @@ func (p *Program) StartReturningModel() (Model, error) {
 
 	cancelReader, err := newCancelReader(p.input)
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("init cancel reader: %w", err)
 	}
 
 	defer cancelReader.Close() // nolint:errcheck
@@ -427,7 +427,7 @@ func (p *Program) StartReturningModel() (Model, error) {
 		defer close(readLoopDone)
 	}
 
-	if f, ok := p.output.(*os.File); ok {
+	if f, ok := p.output.(*os.File); ok && isatty.IsTerminal(f.Fd()) {
 		// Get the initial terminal size and send it to the program.
 		go func() {
 			w, h, err := term.GetSize(int(f.Fd()))
